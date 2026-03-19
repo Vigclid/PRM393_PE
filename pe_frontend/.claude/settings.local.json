@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze lib/screens/main_screen.dart)",
+      "Bash(cmd.exe /c \"cd C:\\\\Users\\\\sonkk\\\\Documents\\\\Code\\\\Flutter\\\\PE\\\\pe_frontend && flutter analyze lib/screens/main_screen.dart 2>&1\")",
+      "Bash(cmd.exe /c \"cd C:\\\\Users\\\\sonkk\\\\Documents\\\\Code\\\\Flutter\\\\PE\\\\pe_frontend && flutter pub add http shared_preferences 2>&1\")"
+    ]
+  }
+}
