@@ -9,6 +9,7 @@ class Product {
   final int stock;
   final String userId;
   final DateTime createdAt;
+  final double averageRating;
 
   const Product({
     required this.id,
@@ -21,6 +22,7 @@ class Product {
     required this.stock,
     required this.userId,
     required this.createdAt,
+    required this.averageRating,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -33,10 +35,14 @@ class Product {
       category: json['category'] as String? ?? '',
       rating: (json['rating'] as num? ?? 0).toDouble(),
       stock: json['stock'] as int? ?? 0,
-      userId: (json['userId'] is Map ? json['userId']['_id'] : json['userId']) as String? ?? '',
+      userId:
+          (json['userId'] is Map ? json['userId']['_id'] : json['userId'])
+              as String? ??
+          '',
       createdAt: json['createAt'] != null
           ? DateTime.tryParse(json['createAt'] as String) ?? DateTime(0)
           : DateTime(0),
+      averageRating: (json['averageRating'] as num? ?? 0).toDouble(),
     );
   }
 }

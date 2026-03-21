@@ -594,7 +594,7 @@ class _ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      product.rating.toStringAsFixed(1),
+                      product.averageRating.toStringAsFixed(1),
                       style: const TextStyle(
                         color: AppColors.gold,
                         fontWeight: FontWeight.w600,
