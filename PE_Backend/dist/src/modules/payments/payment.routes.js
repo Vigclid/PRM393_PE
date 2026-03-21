@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const payment_service_1 = require("./payment.service");
+const payment_controller_1 = require("./payment.controller");
+const express_1 = require("express");
+const authMiddleware_1 = require("../../middlewares/authMiddleware");
+const router = (0, express_1.Router)();
+const paymentController = new payment_controller_1.PaymentController(new payment_service_1.paymentService());
+router.route("/qr").post(authMiddleware_1.authenticate, paymentController.getQrCode);
+router.route("/accept").put(authMiddleware_1.authenticate, paymentController.acceptPayment);
+exports.default = router;

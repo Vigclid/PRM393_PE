@@ -118,8 +118,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
   String? _validateDescription(String? v) {
     if (v == null || v.trim().isEmpty) return 'Description is required';
-    if (v.trim().length > 1000)
+    if (v.trim().length > 1000) {
       return 'Description must not exceed 1000 characters';
+    }
     return null;
   }
 
