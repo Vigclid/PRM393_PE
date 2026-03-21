@@ -7,6 +7,7 @@ import 'cart_screen.dart';
 import 'create_product_screen.dart';
 import 'product_detail_screen.dart';
 import 'profile_screen.dart';
+import 'social_feed_screen.dart';
 
 enum SortOption {
   nameAsc('Name: A → Z'),
@@ -214,6 +215,13 @@ class _MainScreenState extends State<MainScreen> {
               MaterialPageRoute(builder: (_) => const CreateProductScreen()),
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.forum_outlined, color: AppColors.gold),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
+            ),
+          ),
           GestureDetector(
             onTap: () => Navigator.push(
               context,
@@ -241,6 +249,19 @@ class _MainScreenState extends State<MainScreen> {
           ),
           Expanded(child: _buildBody()),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
+        ),
+        backgroundColor: AppColors.gold,
+        foregroundColor: AppColors.onGold,
+        icon: const Icon(Icons.forum_outlined),
+        label: const Text(
+          'Community',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -489,7 +510,7 @@ class _ProductCard extends StatelessWidget {
               height: 160,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, _) => Container(
+              errorBuilder: (context, error, stackTrace) => Container(
                 height: 160,
                 color: AppColors.background,
                 child: const Center(
