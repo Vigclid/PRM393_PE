@@ -49,6 +49,10 @@ export const handleSocketConnection = (conn: Connection) => {
     } catch (err) {}
   });
 
+  conn.on("error", () => {
+    removeClient(conn.id);
+  });
+
   conn.on("close", () => {
     removeClient(conn.id);
   });
