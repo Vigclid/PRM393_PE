@@ -21,7 +21,7 @@ class NetworkException implements Exception {
 
   @override
   String toString() => 'NetworkException: $message';
-}
+} 
 
 class ApiClient {
   static const String baseUrl = 'http://10.0.2.2:8080';
