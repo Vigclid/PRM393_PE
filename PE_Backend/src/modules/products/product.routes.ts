@@ -6,7 +6,7 @@ import { authenticate } from "../../middlewares/authMiddleware";
 const router = Router();
 const ProductController = new productController(new productService());
 
-router.route("/").post(ProductController.create).get(ProductController.getAll);
+router.route("/").post(ProductController.create).get(ProductController.getAllProductsWithAverageRating);
 router
   .route("/me")
   .post(authenticate, ProductController.createProductByMe)
