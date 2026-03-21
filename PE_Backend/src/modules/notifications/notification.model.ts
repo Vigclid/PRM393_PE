@@ -1,8 +1,12 @@
 import mongoose, { Document } from "mongoose";
 
+export type NotificationType = "comment" | "postReaction" | "commentReaction" | "follow";
+
 export interface INotification extends Document {
   message: string;
   createAt: Date;
+  type?: NotificationType;
+  postId?: string;
   interactId: string | null;
   artworkId: string | null;
   profileNotifyId: string | null;
@@ -15,6 +19,8 @@ export interface INotification extends Document {
 export const NotificationSchema = new mongoose.Schema<INotification>({
   message: { type: String, required: true },
   createAt: { type: Date, required: true },
+  type: { type: String, required: false },
+  postId: { type: String, required: false },
   interactId: { type: String, required: false },
   artworkId: { type: String, ref: "artworks", required: false },
   profileNotifyId: { type: String, ref: "users", required: false },

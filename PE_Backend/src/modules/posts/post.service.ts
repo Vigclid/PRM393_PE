@@ -4,6 +4,9 @@ import postCommentReactionModel from "./post-comment-reaction.model";
 import postModel from "./post.model";
 import postReactionModel, { ReactionType, reactionTypes } from "./post-reaction.model";
 import { uploadImage } from "../../utils/imageUtils";
+import { notificationService } from "../notifications/notification.service";
+
+const notifService = new notificationService();
 
 export interface IPostAuthorDto {
   id: string;
@@ -233,8 +236,8 @@ export class PostService {
     imageBase64?: string,
     parentCommentId?: string
   ): Promise<IPostFeedItemDto> {
-    const postExists = await postModel.exists({ _id: postId });
-    if (!postExists) throw new Error("Post not found");
+    const post = await postModel.findById(postId).select("authorId").lean();
+    if (!post) throw new Error("Post not found");
 
     const value = content.trim();
     const imageUrl = await this.uploadOptionalImage(imageBase64);
@@ -253,13 +256,16 @@ export class PostService {
       imageUrl,
       parentCommentId: parentCommentId ?? null,
     });
+
+    void notifService.createPostCommentNotification(post.authorId.toString(), authorId, postId);
+
     const [item] = await this.buildFeed([postId], authorId);
     return item;
   }
 
   async react(postId: string, userId: string, type: ReactionType): Promise<IPostFeedItemDto> {
-    const postExists = await postModel.exists({ _id: postId });
-    if (!postExists) throw new Error("Post not found");
+    const post = await postModel.findById(postId).select("authorId").lean();
+    if (!post) throw new Error("Post not found");
 
     const current = await postReactionModel.findOne({ postId, userId });
     if (current && current.type === type) {
@@ -269,6 +275,7 @@ export class PostService {
       await current.save();
     } else {
       await postReactionModel.create({ postId, userId, type });
+      void notifService.createPostReactionNotification(post.authorId.toString(), userId, postId, type);
     }
 
     const [item] = await this.buildFeed([postId], userId);
@@ -287,6 +294,7 @@ export class PostService {
       await current.save();
     } else {
       await postCommentReactionModel.create({ commentId, userId, type });
+      void notifService.createCommentReactionNotification(comment.authorId.toString(), userId, comment.postId.toString(), type);
     }
 
     const [item] = await this.buildFeed([comment.postId.toString()], userId);

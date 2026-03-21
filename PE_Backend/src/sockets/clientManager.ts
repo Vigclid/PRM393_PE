@@ -20,15 +20,25 @@ export const setUserId = (id: string, userId: string) => {
 };
 
 export const sendToUser = (userId: string, data: object) => {
-  for (const [, conn] of clients) {
+  for (const [id, conn] of clients) {
     if (conn.userId === userId) {
-      conn.write(JSON.stringify(data));
+      try {
+        conn.write(JSON.stringify(data));
+      } catch (err) {
+        console.error("[sendToUser] write error, removing client", id, err);
+        clients.delete(id);
+      }
     }
   }
 };
 
 export const broadcast = (data: object) => {
-  for (const [, conn] of clients) {
-    conn.write(JSON.stringify(data));
+  for (const [id, conn] of clients) {
+    try {
+      conn.write(JSON.stringify(data));
+    } catch (err) {
+      console.error("[broadcast] write error, removing client", id, err);
+      clients.delete(id);
+    }
   }
 };

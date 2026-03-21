@@ -7,6 +7,8 @@ const router = Router();
 const NotificationConroller = new notificationController(new notificationService());
 
 router.route("/").post(NotificationConroller.create).get(NotificationConroller.getAll);
+router.get("/me", authenticate, NotificationConroller.getNotificationByUserId);
+router.put("/me/read", authenticate, NotificationConroller.updateReadNotifications);
 router
   .route("/:id")
   .get(NotificationConroller.getById)
