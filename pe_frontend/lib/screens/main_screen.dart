@@ -216,7 +216,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.forum_outlined, color: AppColors.gold),
+            icon: const Icon(Icons.message, color: AppColors.gold),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
