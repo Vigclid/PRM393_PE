@@ -23,7 +23,14 @@ export class billController extends GenericController<IBill> {
         id: string;
       };
       const cart = await cartModel.findOne({ userId: id });
-      await this.autoSentMessage(req, res, next);
+      
+      // Auto message failures should not block checkout
+      try {
+        await this.autoSentMessage(req, res, next);
+      } catch (autoMessageError) {
+        console.error("Auto message failed, but continuing with checkout:", autoMessageError);
+      }
+      
       const response = await this.BillService.checkout(id, cart as ICart);
       await cartModel.findOneAndUpdate({ userId: id }, { items: [], totalPrice: 0 });
       res.json(responseWrapper("success", "Fetched successfully", response));
@@ -42,7 +49,7 @@ export class billController extends GenericController<IBill> {
     }
   };
 
-  autoSentMessage = async (req: Request, _res: Response, next: NextFunction) => {
+  autoSentMessage = async (req: Request, _res: Response, _next: NextFunction) => {
     try {
       const { id } = jwt.decode(req.headers["authorization"]?.split(" ")[1] as string) as {
         id: string;
@@ -84,7 +91,9 @@ export class billController extends GenericController<IBill> {
       }
       return;
     } catch (error) {
-      next(error);
+      // Log error but don't propagate - auto messages should not block checkout
+      console.error("Error in autoSentMessage:", error);
+      // Don't call next(error) - this would block the checkout process
     }
   };
 }
