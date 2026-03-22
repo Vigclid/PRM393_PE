@@ -20,11 +20,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   final _replyController = TextEditingController();
   bool _sendingReply = false;
   String _currentUserId = '';
+  String _currentUserRole = '';
+  bool _updatingStatus = false;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = UserSession.instance.currentUser?.id ?? '';
+    _currentUserRole = UserSession.instance.currentUser?.roleName ?? '';
     _loadReport();
   }
 
@@ -106,6 +109,45 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       _showError('Error: $e');
     } finally {
       if (mounted) setState(() => _sendingReply = false);
+    }
+  }
+
+  Future<void> _updateStatus(String newStatus) async {
+    setState(() => _updatingStatus = true);
+    try {
+      final token = UserSession.instance.accessToken;
+      if (token == null) {
+        _showError('Please login first');
+        return;
+      }
+
+      debugPrint('Updating report status to: $newStatus');
+
+      final response = await ReportApi.updateStatus(
+        reportId: widget.reportId,
+        status: newStatus,
+        token: token,
+      );
+
+      debugPrint('Update status response: $response');
+
+      if (response['status'] == 'success') {
+        setState(() => _loadReport());
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Status updated to $newStatus'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        _showError(response['message'] ?? 'Failed to update status');
+      }
+    } catch (e) {
+      debugPrint('Error updating status: $e');
+      _showError('Error: $e');
+    } finally {
+      if (mounted) setState(() => _updatingStatus = false);
     }
   }
 
@@ -293,27 +335,50 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       color: _getStatusColor(report['status'] ?? 'Pending'),
                                     ),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(report['status'] ?? 'Pending'),
-                                          shape: BoxShape.circle,
+                                  child: _currentUserRole.toLowerCase() == 'admin'
+                                      ? DropdownButton<String>(
+                                          value: report['status'] ?? 'Pending',
+                                          underline: const SizedBox(),
+                                          style: TextStyle(
+                                            color: _getStatusColor(report['status'] ?? 'Pending'),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                          items: ['Pending', 'InProgress', 'Resolved', 'Closed']
+                                              .map((status) => DropdownMenuItem(
+                                                    value: status,
+                                                    child: Text(status),
+                                                  ))
+                                              .toList(),
+                                          onChanged: _updatingStatus
+                                              ? null
+                                              : (value) {
+                                                  if (value != null) {
+                                                    _updateStatus(value);
+                                                  }
+                                                },
+                                        )
+                                      : Row(
+                                          children: [
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                color: _getStatusColor(report['status'] ?? 'Pending'),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              report['status'] ?? 'Pending',
+                                              style: TextStyle(
+                                                color: _getStatusColor(report['status'] ?? 'Pending'),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        report['status'] ?? 'Pending',
-                                        style: TextStyle(
-                                          color: _getStatusColor(report['status'] ?? 'Pending'),
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ],
                             ),
@@ -394,10 +459,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                 final senderId = reply['senderId'] is Map
                                     ? reply['senderId']['_id'] ?? ''
                                     : reply['senderId'] ?? '';
+                                final senderRole = reply['senderId'] is Map
+                                    ? reply['senderId']['role'] ?? ''
+                                    : '';
                                 final isCurrentUserMessage = senderId == _currentUserId;
+                                final isAdminMessage = senderRole == 'Admin' || senderRole == 'admin';
                                 final senderEmail = reply['senderId'] is Map
-                                    ? reply['senderId']['email'] ?? 'Admin'
-                                    : 'Admin';
+                                    ? reply['senderId']['email'] ?? 'Unknown'
+                                    : 'Unknown';
                                 
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 16),
@@ -409,7 +478,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                                       message: reply['message'] ?? '',
                                       isUser: isCurrentUserMessage,
                                       date: _formatDate(reply['createdAt']),
-                                      senderName: !isCurrentUserMessage ? senderEmail : null,
+                                      senderName: isAdminMessage ? 'Admin' : null,
                                     ),
                                   ),
                                 );

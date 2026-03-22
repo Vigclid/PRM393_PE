@@ -139,6 +139,42 @@ class ApiClient {
     }
   }
 
+  /// PATCH request. Returns the decoded JSON body on success.
+  static Future<Map<String, dynamic>> patch(
+    String path,
+    Map<String, dynamic> body, {
+    String? token,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl$path');
+      final response = await http
+          .patch(
+            uri,
+            headers: _headers(token: token),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } on SocketException {
+      throw const NetworkException(
+        'No internet connection. Please check your network.',
+      );
+    } on TimeoutException {
+      throw const NetworkException(
+        'Request timed out. Please check your connection and try again.',
+      );
+    } on HttpException {
+      throw const NetworkException(
+        'Could not reach the server. Please try again.',
+      );
+    } catch (e) {
+      throw NetworkException('Unexpected error: $e');
+    }
+  }
+
   /// DELETE request. Returns the decoded JSON body on success.
   static Future<Map<String, dynamic>> delete(
     String path, {

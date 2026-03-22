@@ -48,4 +48,25 @@ class ReportApi {
       token: token,
     );
   }
+
+  static Future<Map<String, dynamic>> getAllReports({
+    required String token,
+  }) async {
+    return await ApiClient.get(
+      '/v1/report/all',
+      token: token,
+    );
+  }
+
+  static Future<Map<String, dynamic>> updateStatus({
+    required String reportId,
+    required String status,
+    required String token,
+  }) async {
+    return await ApiClient.patch(
+      '/v1/report/$reportId/status',
+      {'status': status},
+      token: token,
+    );
+  }
 }
