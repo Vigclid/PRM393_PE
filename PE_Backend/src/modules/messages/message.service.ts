@@ -37,9 +37,7 @@ export class messageService extends GenericService<IMessage> {
       })
       .sort({ dateSent: 1 })
       .skip(offset)
-      .limit(limit)
-      .populate("senderId")
-      .populate("receiverId");
+      .limit(limit);
   };
 
   getUnreadCount = async (userId: string) => {

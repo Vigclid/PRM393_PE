@@ -24,7 +24,7 @@ class NetworkException implements Exception {
 }
 
 class ApiClient {
-  static const String baseUrl = 'http://192.168.1.18:8080';
+  static const String baseUrl = 'http://192.168.1.79:8080';
 
   static Map<String, String> _headers({String? token}) => {
     'Content-Type': 'application/json',

@@ -175,7 +175,7 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Create StreamController for incoming messages
     - _Requirements: 2.1, 2.2, 2.3, 4.3_
   
-  - [ ] 7.3 Setup Socket.IO event listeners in SocketService
+  - [x] 7.3 Setup Socket.IO event listeners in SocketService
     - Listen for 'connect' event and emit INIT with userId
     - Listen for 'MESSAGE' event and add to message stream
     - Listen for 'NEW_CHAT' event and add to message stream
@@ -183,7 +183,7 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Listen for 'disconnect' event and handle reconnection
     - _Requirements: 2.2, 2.5, 3.6_
   
-  - [ ] 7.4 Implement reconnection logic with exponential backoff
+  - [x] 7.4 Implement reconnection logic with exponential backoff
     - Retry connection on disconnect with delays: 1s, 2s, 4s, 8s
     - Max 5 reconnection attempts
     - Show "Connecting..." indicator during reconnection
@@ -196,14 +196,14 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Mock Socket.IO for isolated testing
 
 - [ ] 8. Frontend: Create data models
-  - [ ] 8.1 Create Chat model
+  - [x] 8.1 Create Chat model
     - Create lib/models/chat.dart
     - Define Chat class with id, user1, user2, status, lastMessage
     - Implement fromJson factory constructor
     - Implement toJson method
     - _Requirements: 3.1, 3.2_
   
-  - [ ] 8.2 Create Message model
+  - [x] 8.2 Create Message model
     - Create lib/models/message.dart
     - Define Message class with id, senderId, receiverId, message, dateSent, isRead
     - Implement fromJson factory constructor
@@ -216,14 +216,14 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Test toJson serializes correctly
 
 - [ ] 9. Frontend: Create ChatApi service
-  - [ ] 9.1 Create ChatApi service class
+  - [x] 9.1 Create ChatApi service class
     - Create lib/services/chat_api.dart
     - Implement fetchChats method for GET /api/chats/self
     - Implement createChat method for POST /api/chats/self
     - Implement getChatWith method for GET /api/chats/with/:userId
     - _Requirements: 3.1_
   
-  - [ ] 9.2 Create MessageApi service class
+  - [x] 9.2 Create MessageApi service class
     - Create lib/services/message_api.dart
     - Implement fetchMessages method for GET /api/messages/chat/:chatId
     - Implement markAsRead method for PUT /api/messages/:messageId/read
@@ -236,21 +236,21 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Test error handling for failed requests
 
 - [ ] 10. Frontend: Build ChatListScreen UI
-  - [ ] 10.1 Create ChatListScreen widget
+  - [x] 10.1 Create ChatListScreen widget
     - Create lib/screens/chat_list_screen.dart
     - Implement StatefulWidget with AppBar titled "Messages"
     - Use AppColors.background for screen background
     - Add pull-to-refresh functionality
     - _Requirements: 3.1, 11.1_
   
-  - [ ] 10.2 Implement chat list loading and display
+  - [x] 10.2 Implement chat list loading and display
     - Call ChatApi.fetchChats in initState
     - Display chats in ListView.builder with Card widgets
     - Show loading indicator while fetching
     - Show empty state with "No conversations yet" if list is empty
     - _Requirements: 3.1, 3.2, 11.1_
   
-  - [ ] 10.3 Design chat list item UI
+  - [x] 10.3 Design chat list item UI
     - Display user avatar with CircleAvatar (gold background)
     - Display user name in gold color, bold
     - Display last message text in goldMuted, truncated
@@ -258,14 +258,14 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Show gold dot indicator if chat.status = 0 (unread)
     - _Requirements: 3.3, 3.4, 11.2, 11.3, 11.4_
   
-  - [ ] 10.4 Setup realtime updates for chat list
+  - [x] 10.4 Setup realtime updates for chat list
     - Listen to SocketService.messageStream in initState
     - Handle NEW_CHAT event: insert new chat at top of list
     - Handle MESSAGE event: update chat's lastMessage and move to top
     - Handle UPDATE_CHAT event: update chat status
     - _Requirements: 3.5, 3.6_
   
-  - [ ] 10.5 Implement navigation to ChatDetailScreen
+  - [x] 10.5 Implement navigation to ChatDetailScreen
     - Add onTap handler to chat list items
     - Navigate to ChatDetailScreen with chat object as parameter
     - Use MaterialPageRoute for navigation
@@ -277,14 +277,14 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Test navigation to ChatDetailScreen on tap
 
 - [ ] 11. Frontend: Build ChatDetailScreen UI
-  - [ ] 11.1 Create ChatDetailScreen widget
+  - [x] 11.1 Create ChatDetailScreen widget
     - Create lib/screens/chat_detail_screen.dart
     - Implement StatefulWidget with chat parameter
     - Add AppBar with back button and other user's name
     - Use AppColors.background for screen background
     - _Requirements: 4.1, 11.1_
   
-  - [ ] 11.2 Implement message loading and display
+  - [x] 11.2 Implement message loading and display
     - Call MessageApi.fetchMessages in initState
     - Display messages in ListView with reverse scroll
     - Show loading indicator while fetching

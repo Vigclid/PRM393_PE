@@ -8,6 +8,7 @@ import 'create_product_screen.dart';
 import 'product_detail_screen.dart';
 import 'profile_screen.dart';
 import 'social_feed_screen.dart';
+import 'chat_list_screen.dart';
 
 enum SortOption {
   nameAsc('Name: A → Z'),
@@ -219,7 +220,7 @@ class _MainScreenState extends State<MainScreen> {
             icon: const Icon(Icons.message, color: AppColors.gold),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
+              MaterialPageRoute(builder: (_) => const ChatListScreen()),
             ),
           ),
           GestureDetector(
