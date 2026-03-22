@@ -4,7 +4,7 @@ import 'product.dart';
 class Feedback {
   final String id;
   final User user;
-  final Product product;
+  final String productId; // Đổi từ Product sang String
   final String comment;
   final double rating;
   final DateTime createdAt;
@@ -12,7 +12,7 @@ class Feedback {
   Feedback({
     required this.id,
     required this.user,
-    required this.product,
+    required this.productId,
     required this.comment,
     required this.rating,
     required this.createdAt,
@@ -22,9 +22,11 @@ class Feedback {
     return Feedback(
       id: json['_id'],
       user: User.fromJson(json['userId']),
-      product: Product.fromJson(json['productId']),
-      comment: json['comment'],
-      rating: json['rating'] as double,
+      productId: json['productId'] is Map
+          ? json['productId']['_id']
+          : json['productId'].toString(),
+      comment: json['comment'] ?? '',
+      rating: (json['rating'] as num).toDouble(),
       createdAt: DateTime.parse(json['createdAt']),
     );
   }

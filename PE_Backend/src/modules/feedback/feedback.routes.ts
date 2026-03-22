@@ -10,5 +10,5 @@ router.route("/")
     .post(authenticate, FeedbackController.createNewFeedback);
     
 router.route("/:id")
-    .get(authenticate, FeedbackController.getAvarageRatingByProductId);
+    .get(authenticate, FeedbackController.getAllFeedbackByProductId);
 export default router
