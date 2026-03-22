@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pe_frontend/widgets/screen_with_ai_chat.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
 import '../services/socket_service.dart';
@@ -197,42 +198,56 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        scrolledUnderElevation: 2,
-        shadowColor: AppColors.border,
-        title: const Text(
-          'XS Market',
-          style: TextStyle(
-            color: AppColors.gold,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+    return ScreenWithAIChat(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.shopping_cart_outlined,
+        backgroundColor: AppColors.gold,
+        foregroundColor: AppColors.onGold,
+        icon: const Icon(Icons.forum_outlined),
+        label: const Text(
+          'Community',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          scrolledUnderElevation: 2,
+          shadowColor: AppColors.border,
+          title: const Text(
+            'XS Market',
+            style: TextStyle(
               color: AppColors.gold,
-            ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CartScreen()),
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.add_circle_outline_rounded,
-              color: AppColors.gold,
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.shopping_cart_outlined,
+                color: AppColors.gold,
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CartScreen()),
+              ),
             ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateProductScreen()),
+            IconButton(
+              icon: const Icon(
+                Icons.add_circle_outline_rounded,
+                color: AppColors.gold,
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreateProductScreen()),
+              ),
             ),
-          ),
-          IconButton(
+            IconButton(
             icon: const Icon(Icons.forum_outlined, color: AppColors.gold),
             onPressed: () => Navigator.push(
               context,
@@ -277,44 +292,32 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
           GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              ),
+              child: _ProfileAvatar(
+                email: UserSession.instance.currentUser?.email ?? '',
+              ),
             ),
-            child: _ProfileAvatar(
-              email: UserSession.instance.currentUser?.email ?? '',
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: Column(
-        children: [
-          _SearchBar(controller: _searchController),
-          _CategoryFilter(
-            categories: ProductService.categories,
-            selected: _selectedCategory,
-            onSelect: _selectCategory,
-          ),
-          _SortBar(
-            resultCount: _filtered.length,
-            sortOption: _sortOption,
-            onSortTap: _openSortSheet,
-          ),
-          Expanded(child: _buildBody()),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
+            const SizedBox(width: 4),
+          ],
         ),
-        backgroundColor: AppColors.gold,
-        foregroundColor: AppColors.onGold,
-        icon: const Icon(Icons.forum_outlined),
-        label: const Text(
-          'Community',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        body: Column(
+          children: [
+            _SearchBar(controller: _searchController),
+            _CategoryFilter(
+              categories: ProductService.categories,
+              selected: _selectedCategory,
+              onSelect: _selectCategory,
+            ),
+            _SortBar(
+              resultCount: _filtered.length,
+              sortOption: _sortOption,
+              onSortTap: _openSortSheet,
+            ),
+            Expanded(child: _buildBody()),
+          ],
         ),
       ),
     );

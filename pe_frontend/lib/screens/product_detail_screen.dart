@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pe_frontend/screens/cart_screen.dart';
+import 'package:pe_frontend/widgets/screen_with_ai_chat.dart';
 import '../api/api_client.dart';
 import '../api/cart_api.dart';
 import '../api/product_api.dart';
@@ -100,7 +101,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final product = widget.product;
     final inStock = product.stock > 0;
 
-    return Scaffold(
+    return ScreenWithAIChat(
+      productId: product.id,
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
@@ -301,6 +304,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // Sticky Add to Cart bottom bar
       // ---------------------------------------------------------------
       bottomNavigationBar: _BottomBar(product: product),
+      ),
     );
   }
 

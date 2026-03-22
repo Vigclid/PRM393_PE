@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pe_frontend/config/app_config.dart';
+import 'package:pe_frontend/widgets/ai_chat_bubble.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/statistics_screen.dart';
@@ -8,6 +10,7 @@ import 'theme/theme_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.initialize();
   await UserSession.instance.tryRestoreSession();
   runApp(const MyApp());
 }
@@ -26,7 +29,13 @@ class MyApp extends StatelessWidget {
           darkTheme: AppTheme.dark,
           themeMode: ThemeNotifier.instance.mode,
           debugShowCheckedModeBanner: false,
-          home: _homeScreen,
+          home: Stack(
+            children: [
+              _homeScreen,
+              if (UserSession.instance.isLoggedIn)
+                const AIChatBubble(),
+            ],
+          ),
         );
       },
     );
