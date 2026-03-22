@@ -11,12 +11,12 @@ router
   .get(authenticate, reportController.getMyReports)
   .post(authenticate, reportController.create);
 
-router.get("/all", authenticate, authorize(["Admin", "Staff"]), reportController.getAllReports);
+router.get("/all", authenticate, authorize(["Admin"]), reportController.getAllReports);
 
 router.get("/:id", authenticate, reportController.getReportById);
 
 router.post("/:id/reply", authenticate, reportController.addReply);
 
-router.patch("/:id/status", authenticate, authorize(["Admin", "Staff"]), reportController.updateStatus);
+router.patch("/:id/status", authenticate, authorize(["Admin"]), reportController.updateStatus);
 
 export default router;
