@@ -4,6 +4,7 @@ import '../api/bill_api.dart';
 import '../session/user_session.dart';
 import '../theme/app_theme.dart';
 import 'login_screen.dart';
+import 'social_feed_screen.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -91,6 +92,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
+            ),
+            icon: const Icon(Icons.forum_outlined, color: AppColors.gold),
+            tooltip: 'Community',
+          ),
           TextButton.icon(
             onPressed: _onLogout,
             icon: const Icon(
@@ -112,6 +121,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           _FilterBar(selected: _filterType, onSelect: _setFilter),
           Expanded(child: _buildBody()),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
+        ),
+        backgroundColor: AppColors.gold,
+        foregroundColor: AppColors.onGold,
+        icon: const Icon(Icons.post_add_rounded),
+        label: const Text(
+          'Posts',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

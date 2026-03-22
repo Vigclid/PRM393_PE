@@ -1,5 +1,20 @@
 require("dotenv").config();
 
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[unhandledRejection]", reason);
+});
+process.on("SIGTERM", () => {
+  console.error("[SIGTERM] Process received SIGTERM, shutting down.");
+  process.exit(0);
+});
+process.on("SIGINT", () => {
+  console.error("[SIGINT] Process received SIGINT, shutting down.");
+  process.exit(0);
+});
+
 import express from "express";
 import errorHandler from "./src/middlewares/errorHandlers";
 import router from "./src/routes/index.routes";
