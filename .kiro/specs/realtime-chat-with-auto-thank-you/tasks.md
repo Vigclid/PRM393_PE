@@ -291,35 +291,35 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Group messages by date (optional)
     - _Requirements: 4.1, 12.1_
   
-  - [ ] 11.3 Design message bubble UI
+  - [x] 11.3 Design message bubble UI
     - Sent messages: right-aligned, gold background, onGold text
     - Received messages: left-aligned, surface background, gold text with border
     - Display timestamp below message text
     - Use rounded corners for bubbles
     - _Requirements: 4.2, 11.2_
   
-  - [ ] 11.4 Implement message input area
+  - [x] 11.4 Implement message input area
     - Add TextField at bottom with surface background and gold text
     - Add send button (FilledButton with Icons.send_rounded)
     - Disable send button when TextField is empty
     - Clear TextField after sending message
     - _Requirements: 4.3, 4.6_
   
-  - [ ] 11.5 Implement message sending via Socket.IO
+  - [x] 11.5 Implement message sending via Socket.IO
     - Get current user ID from AuthService
     - Determine other user ID from chat object
     - Call SocketService.sendMessage with from, to, message
     - Add sent message to local state immediately (optimistic update)
     - _Requirements: 4.3_
   
-  - [ ] 11.6 Setup realtime message receiving
+  - [x] 11.6 Setup realtime message receiving
     - Listen to SocketService.messageStream in initState
     - Handle MESSAGE event: check if message belongs to current chat
     - Append received message to message list
     - Auto-scroll to bottom when new message arrives
     - _Requirements: 4.4_
   
-  - [ ] 11.7 Implement mark as read functionality
+  - [x] 11.7 Implement mark as read functionality
     - Call MessageApi.markAsRead when screen opens
     - Mark all unread messages in current chat as read
     - Update local message state to reflect read status
@@ -338,7 +338,7 @@ The implementation is divided into backend enhancements (Socket.IO event handlin
     - Add onPressed handler to navigate to ChatListScreen
     - _Requirements: 3.1_
   
-  - [ ] 12.2 Initialize SocketService on app start
+  - [x] 12.2 Initialize SocketService on app start
     - Connect SocketService when user logs in
     - Pass authenticated user ID to connect method
     - Disconnect SocketService when user logs out

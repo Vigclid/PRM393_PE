@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:pe_frontend/screens/cart_screen.dart';
+import 'package:provider/provider.dart';
 import '../api/api_client.dart';
 import '../api/cart_api.dart';
 import '../api/product_api.dart';
 import '../models/product.dart';
 import '../session/user_session.dart';
 import '../theme/app_theme.dart';
+import '../providers/comment_provider.dart';
+import '../widgets/comment_form_widget.dart';
+import '../widgets/comment_list_widget.dart';
 import 'create_product_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -19,9 +23,28 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _deleting = false;
+  late CommentProvider _commentProvider;
+  final ScrollController _scrollController = ScrollController();
 
   bool get _isOwner =>
       widget.product.userId == UserSession.instance.currentUser?.id;
+
+  @override
+  void initState() {
+    super.initState();
+    _commentProvider = CommentProvider();
+    _loadComments();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadComments() async {
+    await _commentProvider.loadComments(widget.product.id);
+  }
 
   String _formatDate(DateTime dt) {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
@@ -99,11 +122,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final product = widget.product;
     final inStock = product.stock > 0;
+    final isAuthenticated = UserSession.instance.currentUser != null;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
+    return ChangeNotifierProvider.value(
+      value: _commentProvider,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
           // ---------------------------------------------------------------
           // Collapsible app bar with product image
           // ---------------------------------------------------------------
@@ -289,6 +316,102 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     label: 'Product ID',
                     value: '${product.id.substring(0, 8)}…',
                   ),
+                  
+                  // Comments section
+                  const SizedBox(height: 20),
+                  const Divider(color: AppColors.border),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Comments',
+                    style: TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Comment form (only if authenticated)
+                  if (isAuthenticated) ...[
+                    CommentFormWidget(
+                      productId: product.id,
+                      onCommentCreated: () {
+                        // Optionally scroll to show new comment
+                      },
+                      onError: (message) {
+                        _showError(message);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
+                  // Comment list
+                  CommentListWidget(
+                    productId: product.id,
+                    scrollController: _scrollController,
+                    onEditComment: (comment) async {
+                      final result = await showDialog<String>(
+                        context: context,
+                        builder: (ctx) => _EditCommentDialog(
+                          initialText: comment.comment,
+                        ),
+                      );
+                      if (result != null && result.isNotEmpty) {
+                        await _commentProvider.updateComment(
+                          comment.id,
+                          result,
+                        );
+                        if (_commentProvider.error != null) {
+                          _showError(_commentProvider.error!);
+                        }
+                      }
+                    },
+                    onDeleteComment: (comment) async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppColors.surface,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          title: const Text(
+                            'Delete Comment',
+                            style: TextStyle(
+                              color: AppColors.gold,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: const Text(
+                            'Are you sure you want to delete this comment?',
+                            style: TextStyle(color: AppColors.goldMuted),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.redAccent,
+                              ),
+                              child: const Text('Delete'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await _commentProvider.deleteComment(comment.id);
+                        if (_commentProvider.error != null) {
+                          _showError(_commentProvider.error!);
+                        }
+                      }
+                    },
+                    onError: (message) {
+                      _showError(message);
+                    },
+                  ),
+                  
                   const SizedBox(height: 100), // space for bottom bar
                 ],
               ),
@@ -301,6 +424,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // Sticky Add to Cart bottom bar
       // ---------------------------------------------------------------
       bottomNavigationBar: _BottomBar(product: product),
+      ),
     );
   }
 
@@ -599,6 +723,84 @@ class _QtyButton extends StatelessWidget {
           color: onTap != null ? AppColors.gold : AppColors.border,
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Edit Comment Dialog
+// ---------------------------------------------------------------------------
+class _EditCommentDialog extends StatefulWidget {
+  final String initialText;
+
+  const _EditCommentDialog({required this.initialText});
+
+  @override
+  State<_EditCommentDialog> createState() => _EditCommentDialogState();
+}
+
+class _EditCommentDialogState extends State<_EditCommentDialog> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: const Text(
+        'Edit Comment',
+        style: TextStyle(
+          color: AppColors.gold,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      content: TextField(
+        controller: _controller,
+        maxLines: 5,
+        maxLength: 2000,
+        style: const TextStyle(color: AppColors.gold),
+        decoration: const InputDecoration(
+          hintText: 'Enter your comment...',
+          hintStyle: TextStyle(color: AppColors.goldMuted),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.gold),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            final text = _controller.text.trim();
+            if (text.isNotEmpty) {
+              Navigator.pop(context, text);
+            }
+          },
+          style: TextButton.styleFrom(foregroundColor: AppColors.gold),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

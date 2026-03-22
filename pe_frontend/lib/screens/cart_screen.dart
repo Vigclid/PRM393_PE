@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pe_frontend/screens/checkout_screen.dart';
 import '../api/api_client.dart';
-import '../api/bill_api.dart';
 import '../api/cart_api.dart';
 import '../models/cart.dart';
 import '../theme/app_theme.dart';
@@ -210,33 +210,42 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  bool _checkingOut = false;
+  final bool _checkingOut = false;
 
   Future<void> _onCheckout() async {
-    if (_checkingOut) return;
-    setState(() => _checkingOut = true);
-    try {
-      await BillApi.checkout();
-      if (!mounted) return;
-      setState(() => _items = []);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order placed successfully!'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      _showError(e.message);
-    } on NetworkException catch (e) {
-      if (!mounted) return;
-      _showError(e.message);
-    } catch (_) {
-      if (!mounted) return;
-      _showError('Checkout failed. Please try again.');
-    } finally {
-      if (mounted) setState(() => _checkingOut = false);
-    }
+    // if (_checkingOut) return;
+    // setState(() => _checkingOut = true);
+    // try {
+    //   await BillApi.checkout();
+    //   if (!mounted) return;
+    //   setState(() => _items = []);
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Order placed successfully!'),
+    //       behavior: SnackBarBehavior.floating,
+    //     ),
+    //   );
+    // } on ApiException catch (e) {
+    //   if (!mounted) return;
+    //   _showError(e.message);
+    // } on NetworkException catch (e) {
+    //   if (!mounted) return;
+    //   _showError(e.message);
+    // } catch (_) {
+    //   if (!mounted) return;
+    //   _showError('Checkout failed. Please try again.');
+    // } finally {
+    //   if (mounted) setState(() => _checkingOut = false);
+    // }
+
+    if (_items == null || _items!.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CheckoutScreen(items: _items!, total: _total),
+      ),
+    );
   }
 }
 
@@ -519,8 +528,10 @@ class _BottomBar extends StatelessWidget {
                     )
                   : const Text(
                       'Checkout',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
             ),
           ),

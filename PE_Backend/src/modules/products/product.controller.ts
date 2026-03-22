@@ -72,4 +72,13 @@ export class productController extends GenericController<IProduct> {
       next(error);
     }
   };
+
+  getAllProductsWithAverageRating = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const response = await this.ProductService.getAllProductsWithAverageRating();
+      res.json(responseWrapper("success", "Fetched successfully", response));
+    } catch (error) {
+      next(error);
+    }
+  };
 }

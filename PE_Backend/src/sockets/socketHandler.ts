@@ -21,12 +21,16 @@ interface SocketMessage {
 }
 
 const handleChatMessage = async (data: SocketMessage): Promise<void> => {
+  console.log(`[handleChatMessage] Starting with data:`, data);
+  
   // Validate that from, to, and message are non-null and non-empty
   if (!data.from || !data.to || !data.message) {
+    console.warn(`[handleChatMessage] Missing required fields:`, { from: data.from, to: data.to, message: data.message });
     return;
   }
 
   if (data.from.trim() === "" || data.to.trim() === "" || data.message.trim() === "") {
+    console.warn(`[handleChatMessage] Empty fields after trim`);
     return;
   }
 
@@ -42,6 +46,7 @@ const handleChatMessage = async (data: SocketMessage): Promise<void> => {
   }
 
   try {
+    console.log(`[handleChatMessage] Saving message to database...`);
     // Save message to database
     const msgService = new messageService();
     const savedMessage = await msgService.create({
@@ -51,8 +56,10 @@ const handleChatMessage = async (data: SocketMessage): Promise<void> => {
       dateSent: new Date(),
       isRead: 0,
     } as any);
+    console.log(`[handleChatMessage] Message saved:`, savedMessage._id);
 
     // Emit message to receiver via Socket.IO
+    console.log(`[handleChatMessage] Sending MESSAGE event to user ${data.to}`);
     sendToUser(data.to, {
       type: "MESSAGE",
       message: savedMessage,
@@ -60,21 +67,29 @@ const handleChatMessage = async (data: SocketMessage): Promise<void> => {
     });
 
     // Update chat status to unread for receiver
+    console.log(`[handleChatMessage] Updating chat status...`);
     const chatSvc = new chatService();
     const chat = await chatSvc.checkExistChatUser1AndUser2(data.from, data.to);
     if (chat) {
       chat.status = 0;
       await chat.save();
+      console.log(`[handleChatMessage] Chat status updated to unread`);
+    } else {
+      console.warn(`[handleChatMessage] Chat not found between ${data.from} and ${data.to}`);
     }
+    
+    console.log(`[handleChatMessage] Completed successfully`);
   } catch (error) {
-    console.error("Error handling chat message:", error);
+    console.error("[handleChatMessage] Error:", error);
   }
 };
 
 export const handleSocketConnection = (conn: Connection) => {
   addClient(conn.id, conn);
+  console.log(`[SockJS] New connection: ${conn.id}`);
 
   conn.on("data", async (message: string) => {
+    console.log(`[SockJS] Received data from ${conn.id}:`, message);
     try {
       // Check rate limit before processing any event
       // Validates: Requirements 8.5
@@ -90,6 +105,7 @@ export const handleSocketConnection = (conn: Connection) => {
       }
 
       const data: SocketMessage = JSON.parse(message);
+      console.log(`[SockJS] Parsed data:`, data);
 
       switch (data.type) {
         case "INIT":
@@ -100,10 +116,12 @@ export const handleSocketConnection = (conn: Connection) => {
               return;
             }
             setUserId(conn.id, data.userId);
+            console.log(`[SockJS] User ${data.userId} registered to connection ${conn.id}`);
           }
           break;
 
         case "CHAT":
+          console.log(`[SockJS] Processing CHAT event:`, data);
           await handleChatMessage(data);
           break;
 
@@ -118,11 +136,20 @@ export const handleSocketConnection = (conn: Connection) => {
           break;
 
         default:
+          console.log(`[SockJS] Unknown event type: ${data.type}`);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error(`[SockJS] Error processing message:`, err);
+    }
+  });
+
+  conn.on("error", () => {
+    console.log(`[SockJS] Connection error: ${conn.id}`);
+    removeClient(conn.id);
   });
 
   conn.on("close", () => {
+    console.log(`[SockJS] Connection closed: ${conn.id}`);
     removeClient(conn.id);
     cleanupRateLimit(conn.id);
   });

@@ -86,11 +86,16 @@ class _ChatListScreenState extends State<ChatListScreen> {
         setState(() {
           // Create updated chat with new lastMessage
           final oldChat = _chats[chatIndex];
+          
+          // Only set status to unread (0) if message is from OTHER user
+          // If message is from current user, keep status as read (1)
+          final isFromOtherUser = message.senderId != currentUserId;
+          
           final updatedChat = Chat(
             id: oldChat.id,
             user1: oldChat.user1,
             user2: oldChat.user2,
-            status: 0, // Set to unread
+            status: isFromOtherUser ? 0 : 1, // Unread only if from other user
             lastMessage: message,
           );
           
@@ -204,8 +209,29 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   /// Navigate to ChatDetailScreen with selected chat
   /// Task 10.5: Validates Requirement 4.1
-  void _navigateToChatDetail(Chat chat) {
-    Navigator.push(
+  /// Mark chat as read immediately when user opens it
+  Future<void> _navigateToChatDetail(Chat chat) async {
+    // Mark chat as read immediately when user opens it
+    // This removes the unread indicator (gold dot) right away
+    if (chat.status == 0) {
+      setState(() {
+        final chatIndex = _chats.indexWhere((c) => c.id == chat.id);
+        if (chatIndex >= 0) {
+          final oldChat = _chats[chatIndex];
+          final updatedChat = Chat(
+            id: oldChat.id,
+            user1: oldChat.user1,
+            user2: oldChat.user2,
+            status: 1, // Mark as read
+            lastMessage: oldChat.lastMessage,
+          );
+          _chats[chatIndex] = updatedChat;
+        }
+      });
+    }
+    
+    // Navigate to chat detail screen
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatDetailScreen(chat: chat),
@@ -277,8 +303,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
             ? _formatTimestamp(chat.lastMessage!.dateSent)
             : '';
         
-        // Check if chat has unread messages (status = 0)
-        final hasUnread = chat.status == 0;
+        // Check if chat has unread messages from OTHER user (not from yourself)
+        // Only show unread indicator if:
+        // 1. Chat status is unread (status = 0)
+        // 2. Last message is from the other user (not from current user)
+        final hasUnread = chat.status == 0 && 
+                          chat.lastMessage != null && 
+                          chat.lastMessage!.senderId != currentUserId;
         
         return Card(
           color: AppColors.surface,

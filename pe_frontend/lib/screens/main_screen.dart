@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/product_service.dart';
+import '../services/socket_service.dart';
 import '../session/user_session.dart';
 import '../theme/app_theme.dart';
 import 'cart_screen.dart';
 import 'create_product_screen.dart';
+import 'notification_screen.dart';
 import 'product_detail_screen.dart';
 import 'profile_screen.dart';
 import 'social_feed_screen.dart';
@@ -39,16 +43,29 @@ class _MainScreenState extends State<MainScreen> {
   SortOption _sortOption = SortOption.nameAsc;
   bool _loading = true;
   String? _error;
+  int _unreadNotifCount = 0;
+  StreamSubscription<Map<String, dynamic>>? _notifSub;
 
   @override
   void initState() {
     super.initState();
     _loadProducts();
     _searchController.addListener(_applyFilters);
+    _connectSocket();
+  }
+
+  void _connectSocket() {
+    final userId = UserSession.instance.currentUser?.id;
+    if (userId == null) return;
+    SocketService.instance.connect(userId);
+    _notifSub = SocketService.instance.notificationStream.listen((_) {
+      if (mounted) setState(() => _unreadNotifCount++);
+    });
   }
 
   @override
   void dispose() {
+    _notifSub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -222,6 +239,43 @@ class _MainScreenState extends State<MainScreen> {
               context,
               MaterialPageRoute(builder: (_) => const ChatListScreen()),
             ),
+          ),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined, color: AppColors.gold),
+                onPressed: () async {
+                  setState(() => _unreadNotifCount = 0);
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                  );
+                },
+              ),
+              if (_unreadNotifCount > 0)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      _unreadNotifCount > 99 ? '99+' : '$_unreadNotifCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
           GestureDetector(
             onTap: () => Navigator.push(
@@ -595,7 +649,7 @@ class _ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 2),
                     Text(
-                      product.rating.toStringAsFixed(1),
+                      product.averageRating.toStringAsFixed(1),
                       style: const TextStyle(
                         color: AppColors.gold,
                         fontWeight: FontWeight.w600,
