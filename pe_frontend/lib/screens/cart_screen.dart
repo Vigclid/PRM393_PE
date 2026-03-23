@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pe_frontend/screens/checkout_screen.dart';
 import '../api/api_client.dart';
-import '../api/bill_api.dart';
 import '../api/cart_api.dart';
 import '../models/cart.dart';
 import '../theme/app_theme.dart';
@@ -211,7 +210,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  bool _checkingOut = false;
+  final bool _checkingOut = false;
 
   Future<void> _onCheckout() async {
     // if (_checkingOut) return;

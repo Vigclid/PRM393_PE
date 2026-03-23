@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pe_frontend/screens/cart_screen.dart';
+import 'package:provider/provider.dart';
 import '../api/api_client.dart';
 import '../api/cart_api.dart';
 import '../api/product_api.dart';
@@ -8,6 +9,9 @@ import '../models/product.dart';
 import '../models/feedback.dart' as model;
 import '../session/user_session.dart';
 import '../theme/app_theme.dart';
+import '../providers/comment_provider.dart';
+import '../widgets/comment_form_widget.dart';
+import '../widgets/comment_list_widget.dart';
 import 'create_product_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -302,6 +306,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ],
       ),
       bottomNavigationBar: _BottomBar(product: product),
+      ),
     );
   }
 

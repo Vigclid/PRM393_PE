@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 
 /// Thrown when the server returns a non-2xx status code.
 class ApiException implements Exception {
@@ -24,7 +25,9 @@ class NetworkException implements Exception {
 } 
 
 class ApiClient {
-  static const String baseUrl = 'http://10.0.2.2:8080';
+  /// Base URL from centralized config
+  /// Change in lib/config/app_config.dart to update all API calls
+  static String get baseUrl => AppConfig.baseUrl;
 
   static Map<String, String> _headers({String? token}) => {
     'Content-Type': 'application/json',

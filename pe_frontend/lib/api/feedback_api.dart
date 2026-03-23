@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:pe_frontend/session/user_session.dart';
 import 'api_client.dart';
-import '../models/feedback.dart';
 
 class FeedbackApi {
   static Future<void> createNewFeedback({

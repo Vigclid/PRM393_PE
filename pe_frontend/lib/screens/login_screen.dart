@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../api/auth_api.dart';
 import '../api/api_client.dart';
 import '../session/user_session.dart';
+import '../utils/socket_helper.dart';
 import 'main_screen.dart';
 import 'register_screen.dart';
 import 'statistics_screen.dart';
@@ -60,6 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
         user: response.user,
         rememberMe: _rememberMe,
       );
+      
+      // Task 12.2: Connect Socket.IO after successful login
+      // This enables realtime chat functionality
+      await SocketHelper.ensureConnected();
+      
       if (!mounted) return;
       final isAdmin = response.user.roleName.toLowerCase() == 'admin';
       Navigator.of(context).pushAndRemoveUntil(
