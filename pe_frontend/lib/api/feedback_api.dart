@@ -34,4 +34,19 @@ class FeedbackApi {
     }
     return json['data'] as double;
   }
+
+  static Future<List<Feedback>> fetchFeedbacks(String productId) async {
+    final token = UserSession.instance.accessToken;
+    final json = await ApiClient.get('/v1/feedbacks/$productId', token: token);
+    final status = json['status'] as String?;
+    if (status != 'success') {
+      final message =
+          json['message'] as String? ?? 'Failed to fetch feedbacks.';
+      throw ApiException(statusCode: 0, message: message);
+    }
+    final data = json['data'] as List<dynamic>;
+    return data
+        .map((e) => Feedback.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 }
