@@ -10,7 +10,7 @@ class AppConfig {
   /// - Android emulator: 'http://10.0.2.2:8080'
   /// - iOS simulator: 'http://localhost:8080'
   /// - Production: 'https://api.yourapp.com'
-  static const String baseUrl = 'http://192.168.1.158:8080';
+  static const String baseUrl = 'http://10.0.2.2:8080';
 
   /// Socket.IO URL (same as baseUrl for most cases)
   /// Override this if Socket.IO is on a different server

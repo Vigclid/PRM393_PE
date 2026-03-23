@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pe_frontend/config/app_config.dart';
 import 'package:pe_frontend/widgets/ai_chat_bubble.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
@@ -10,7 +9,6 @@ import 'theme/theme_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppConfig.initialize();
   await UserSession.instance.tryRestoreSession();
   runApp(const MyApp());
 }
