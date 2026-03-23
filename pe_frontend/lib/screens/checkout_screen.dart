@@ -251,7 +251,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: widget.items.length,
-      separatorBuilder: (_, __) => const Divider(color: AppColors.border),
+      separatorBuilder: (_, _) => const Divider(color: AppColors.border),
       itemBuilder: (context, index) {
         final item = widget.items[index];
         return ListTile(
@@ -263,7 +263,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               width: 50,
               height: 50,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (_, _, _) =>
                   Container(color: AppColors.surface, width: 50, height: 50),
             ),
           ),

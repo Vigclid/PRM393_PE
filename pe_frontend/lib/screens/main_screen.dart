@@ -13,6 +13,7 @@ import 'notification_screen.dart';
 import 'product_detail_screen.dart';
 import 'profile_screen.dart';
 import 'social_feed_screen.dart';
+import 'chat_list_screen.dart';
 
 enum SortOption {
   nameAsc('Name: A → Z'),
@@ -248,50 +249,58 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             IconButton(
-            icon: const Icon(Icons.forum_outlined, color: AppColors.gold),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SocialFeedScreen()),
-            ),
-          ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: AppColors.gold),
-                onPressed: () async {
-                  setState(() => _unreadNotifCount = 0);
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
-                  );
-                },
+              icon: const Icon(Icons.forum_outlined, color: AppColors.gold),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChatListScreen()),
               ),
-              if (_unreadNotifCount > 0)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      _unreadNotifCount > 99 ? '99+' : '$_unreadNotifCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+            ),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.gold,
+                  ),
+                  onPressed: () async {
+                    setState(() => _unreadNotifCount = 0);
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificationScreen(),
                       ),
-                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
+                if (_unreadNotifCount > 0)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        _unreadNotifCount > 99 ? '99+' : '$_unreadNotifCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          GestureDetector(
+              ],
+            ),
+            GestureDetector(
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ProfileScreen()),

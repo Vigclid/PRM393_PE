@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
+import '../utils/socket_helper.dart';
 
 /// Keys used in SharedPreferences storage.
 abstract class _Keys {
@@ -75,6 +76,10 @@ class UserSession extends ChangeNotifier {
   Future<void> logout() async {
     _accessToken = null;
     _currentUser = null;
+    
+    // Task 12.2: Disconnect Socket.IO when user logs out
+    SocketHelper.disconnect();
+    
     final prefs = await SharedPreferences.getInstance();
     await _clearPrefs(prefs);
     notifyListeners();

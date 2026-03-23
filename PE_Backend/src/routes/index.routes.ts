@@ -7,11 +7,12 @@ import v1Message from "./v1/message.routes";
 import v1Product from "./v1/product.routes";
 import v1Cart from "./v1/cart.routes";
 import v1Bill from "./v1/bill.routes";
-import v1Report from "./v1/report.routes"
-import v1AI from "./v1/ai.routes"
+import v1Report from "./v1/report.routes";
+import v1AI from "./v1/ai.routes";
 import v1Feedback from "./v1/feedback.routes";
 import v1Post from "./v1/post.routes";
 import v1Notification from "./v1/notification.routes";
+import v1ProductComment from "./v1/product-comment.routes";
 
 const router = Router();
 
@@ -28,6 +29,8 @@ router.use(
   v1Post,
   v1Feedback,
   v1Notification,
-  v1Report, 
-  v1AI);
+  v1ProductComment,
+  v1Report,
+  v1AI
+);
 export default router;

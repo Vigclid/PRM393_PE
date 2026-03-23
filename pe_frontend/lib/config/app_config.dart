@@ -1,37 +1,34 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-
+/// Application configuration
+///
+/// Centralized configuration for API endpoints, Socket.IO URLs, and other app settings.
+/// Change baseUrl here to update both REST API and Socket.IO connections.
 class AppConfig {
-  static late String _baseUrl;
+  /// Base URL for backend server
+  ///
+  /// Examples:
+  /// - Local development: 'http://192.168.1.79:8080'
+  /// - Android emulator: 'http://10.0.2.2:8080'
+  /// - iOS simulator: 'http://localhost:8080'
+  /// - Production: 'https://api.yourapp.com'
+  static const String baseUrl = 'http://192.168.1.158:8080';
 
-  static Future<void> initialize() async {
-    _baseUrl = await _loadBaseUrl();
-  }
+  /// Socket.IO URL (same as baseUrl for most cases)
+  /// Override this if Socket.IO is on a different server
+  static const String socketUrl = baseUrl;
 
-  static Future<String> _loadBaseUrl() async {
-    try {
-      // Đọc file .env từ thư mục gốc của project
-      final envFile = File('.env');
-      
-      if (await envFile.exists()) {
-        final content = await envFile.readAsString();
-        final lines = content.split('\n');
-        
-        for (final line in lines) {
-          if (line.startsWith('FLUTTER_APP_API_BASE_URL=')) {
-            return line.split('=')[1].trim();
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error reading .env file: $e');
-      }
-    }
-    
-    // Fallback URL nếu không tìm thấy .env
-    return 'http://localhost:8080';
-  }
+  /// API timeout duration
+  static const Duration apiTimeout = Duration(seconds: 30);
 
-  static String get baseUrl => _baseUrl;
+  /// Socket.IO reconnection settings
+  static const int socketReconnectionDelay = 1000; // 1 second
+  static const int socketReconnectionDelayMax = 30000; // 30 seconds
+  static const int socketReconnectionAttempts = 5;
+
+  /// Environment helpers
+  static bool get isDevelopment =>
+      baseUrl.contains('192.168') ||
+      baseUrl.contains('localhost') ||
+      baseUrl.contains('10.0.2.2');
+
+  static bool get isProduction => !isDevelopment;
 }

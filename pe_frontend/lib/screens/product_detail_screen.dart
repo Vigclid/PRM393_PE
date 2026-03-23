@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:pe_frontend/screens/cart_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:pe_frontend/widgets/screen_with_ai_chat.dart';
 import '../api/api_client.dart';
 import '../api/cart_api.dart';
 import '../api/product_api.dart';
+import '../api/feedback_api.dart';
 import '../models/product.dart';
+import '../models/feedback.dart' as model;
 import '../session/user_session.dart';
 import '../theme/app_theme.dart';
+import '../providers/comment_provider.dart';
+import '../widgets/comment_form_widget.dart';
+import '../widgets/comment_list_widget.dart';
 import 'create_product_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -20,12 +26,37 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _deleting = false;
+  List<model.Feedback> _feedbacks = [];
+  bool _loadingFeedbacks = true;
 
   bool get _isOwner =>
       widget.product.userId == UserSession.instance.currentUser?.id;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadFeedbacks();
+  }
+
   String _formatDate(DateTime dt) {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _loadFeedbacks() async {
+    try {
+      final data = await FeedbackApi.fetchFeedbacks(widget.product.id);
+      if (mounted) {
+        setState(() {
+          _feedbacks = data;
+          _loadingFeedbacks = false;
+        });
+      }
+    } catch (e) {
+      debugPrint(
+        'Error loading feedbacks: $e',
+      ); // In lỗi ra để kiểm tra nếu parse JSON thất bại
+      if (mounted) setState(() => _loadingFeedbacks = false);
+    }
   }
 
   Future<void> _onEdit() async {
@@ -75,14 +106,124 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       _showError(e.message);
-    } on NetworkException catch (e) {
-      if (!mounted) return;
-      _showError(e.message);
     } catch (_) {
       if (!mounted) return;
-      _showError('Failed to delete product. Please try again.');
+      _showError('Failed to delete product.');
     } finally {
       if (mounted) setState(() => _deleting = false);
+    }
+  }
+
+  void _showFeedbackModal() {
+    double selectedRating = 5;
+    final commentController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Product Feedback',
+                style: TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < selectedRating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: AppColors.gold,
+                      size: 32,
+                    ),
+                    onPressed: () =>
+                        setModalState(() => selectedRating = index + 1.0),
+                  );
+                }),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: commentController,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Share your experience...',
+                  hintStyle: const TextStyle(color: AppColors.goldMuted),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.gold),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () async {
+                    if (commentController.text.trim().isEmpty) {
+                      _showError("Please enter your feedback");
+                      return;
+                    }
+                    Navigator.pop(ctx);
+                    await _handleFeedbackSubmit(
+                      selectedRating,
+                      commentController.text,
+                    );
+                  },
+                  child: const Text('Send Feedback'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleFeedbackSubmit(double rating, String comment) async {
+    try {
+      await FeedbackApi.createNewFeedback(
+        productId: widget.product.id,
+        rating: rating,
+        comment: comment,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Feedback sent successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _loadFeedbacks();
+    } on ApiException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('An unexpected error occurred.');
     }
   }
 
@@ -91,7 +232,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -104,207 +244,280 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return ScreenWithAIChat(
       productId: product.id,
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ---------------------------------------------------------------
-          // Collapsible app bar with product image
-          // ---------------------------------------------------------------
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: AppColors.surface,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: AppColors.gold,
+        backgroundColor: AppColors.background,
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 300,
+              pinned: true,
+              backgroundColor: AppColors.surface,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.gold,
+                ),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: _isOwner
-                ? [
-                    if (_deleting)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.gold,
+              actions: _isOwner
+                  ? [
+                      if (_deleting)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.gold,
+                              ),
                             ),
                           ),
+                        )
+                      else ...[
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.gold,
+                          ),
+                          onPressed: _onEdit,
                         ),
-                      )
-                    else ...[
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.gold,
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: _onDelete,
                         ),
-                        onPressed: _onEdit,
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: _onDelete,
-                      ),
-                    ],
-                  ]
-                : null,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: 'product-image-${product.id}',
-                child: product.imageUrl.isNotEmpty
-                    ? Image.network(
-                        product.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _imagePlaceholder,
-                      )
-                    : _imagePlaceholder,
+                      ],
+                    ]
+                  : null,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Hero(
+                  tag: 'product-image-${product.id}',
+                  child: product.imageUrl.isNotEmpty
+                      ? Image.network(
+                          product.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _imagePlaceholder,
+                        )
+                      : _imagePlaceholder,
+                ),
               ),
             ),
-          ),
-
-          // ---------------------------------------------------------------
-          // Content
-          // ---------------------------------------------------------------
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Category badge + stock status
-                  Row(
-                    children: [
-                      _Badge(label: product.category),
-                      const Spacer(),
-                      Icon(
-                        inStock
-                            ? Icons.check_circle_outline
-                            : Icons.cancel_outlined,
-                        size: 16,
-                        color: inStock ? Colors.greenAccent : Colors.redAccent,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(product, inStock),
+                    const SizedBox(height: 12),
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        inStock
-                            ? 'In stock (${product.stock})'
-                            : 'Out of stock',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: inStock
-                              ? Colors.greenAccent
-                              : Colors.redAccent,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Name
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
+                    _buildPriceAndRating(product),
+                    const SizedBox(height: 20),
+                    const Divider(color: AppColors.border),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Description'),
+                    const SizedBox(height: 8),
+                    Text(
+                      product.description,
+                      style: const TextStyle(
+                        color: AppColors.goldMuted,
+                        fontSize: 14,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(color: AppColors.border),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Details'),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      icon: Icons.category_outlined,
+                      label: 'Category',
+                      value: product.category,
+                    ),
+                    _DetailRow(
+                      icon: Icons.inventory_2_outlined,
+                      label: 'Stock',
+                      value: '${product.stock} units',
+                    ),
+                    _DetailRow(
+                      icon: Icons.calendar_today_outlined,
+                      label: 'Listed on',
+                      value: _formatDate(product.createdAt),
+                    ),
+                    _DetailRow(
+                      icon: Icons.fingerprint,
+                      label: 'Product ID',
+                      value: '${product.id.substring(0, 8)}…',
+                    ),
 
-                  // Price + rating row
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    const SizedBox(height: 20),
+                    const Divider(color: AppColors.border),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionTitle('Feedback'),
+                        TextButton.icon(
+                          onPressed: _showFeedbackModal,
+                          icon: const Icon(
+                            Icons.rate_review_outlined,
+                            size: 18,
+                            color: AppColors.gold,
+                          ),
+                          label: const Text(
+                            'Add Review',
+                            style: TextStyle(color: AppColors.gold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildFeedbackList(),
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: _BottomBar(product: product),
+      ),
+    );
+  }
+
+  Widget _buildHeader(Product product, bool inStock) {
+    return Row(
+      children: [
+        _Badge(label: product.category),
+        const Spacer(),
+        Icon(
+          inStock ? Icons.check_circle_outline : Icons.cancel_outlined,
+          size: 16,
+          color: inStock ? Colors.greenAccent : Colors.redAccent,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          inStock ? 'In stock (${product.stock})' : 'Out of stock',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: inStock ? Colors.greenAccent : Colors.redAccent,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriceAndRating(Product product) {
+    return Row(
+      children: [
+        Text(
+          '\$${product.price.toStringAsFixed(2)}',
+          style: const TextStyle(
+            color: AppColors.gold,
+            fontWeight: FontWeight.bold,
+            fontSize: 26,
+          ),
+        ),
+        const Spacer(),
+        _StarRating(rating: product.averageRating),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: AppColors.gold,
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
+      ),
+    );
+  }
+
+  Widget _buildFeedbackList() {
+    if (_loadingFeedbacks) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      );
+    }
+    if (_feedbacks.isEmpty) {
+      return const Text(
+        'No feedback yet. Purchased this item? Share your thoughts!',
+        style: TextStyle(color: AppColors.goldMuted, fontSize: 13),
+      );
+    }
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _feedbacks.length,
+      separatorBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Divider(color: AppColors.border, thickness: 0.5),
+      ),
+      itemBuilder: (ctx, index) {
+        final fb = _feedbacks[index];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.surface,
+                  child: Icon(Icons.person, size: 20, color: AppColors.gold),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '\$${product.price.toStringAsFixed(2)}',
+                        fb.user.email,
                         style: const TextStyle(
-                          color: AppColors.gold,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 26,
+                          fontSize: 14,
                         ),
                       ),
-                      const Spacer(),
-                      _StarRating(rating: product.rating),
+                      _StarRating(rating: fb.rating),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // Divider
-                  const Divider(color: AppColors.border),
-                  const SizedBox(height: 16),
-
-                  // Description
-                  const Text(
-                    'Description',
-                    style: TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                ),
+                Text(
+                  _formatDate(fb.createdAt),
+                  style: const TextStyle(
+                    color: AppColors.goldMuted,
+                    fontSize: 12,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    product.description,
-                    style: const TextStyle(
-                      color: AppColors.goldMuted,
-                      fontSize: 14,
-                      height: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Details card
-                  const Divider(color: AppColors.border),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Details',
-                    style: TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _DetailRow(
-                    icon: Icons.category_outlined,
-                    label: 'Category',
-                    value: product.category,
-                  ),
-                  _DetailRow(
-                    icon: Icons.inventory_2_outlined,
-                    label: 'Stock',
-                    value: '${product.stock} units',
-                  ),
-                  _DetailRow(
-                    icon: Icons.calendar_today_outlined,
-                    label: 'Listed on',
-                    value: _formatDate(product.createdAt),
-                  ),
-                  _DetailRow(
-                    icon: Icons.fingerprint,
-                    label: 'Product ID',
-                    value: '${product.id.substring(0, 8)}…',
-                  ),
-                  const SizedBox(height: 100), // space for bottom bar
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-
-      // ---------------------------------------------------------------
-      // Sticky Add to Cart bottom bar
-      // ---------------------------------------------------------------
-      bottomNavigationBar: _BottomBar(product: product),
-      ),
+            const SizedBox(height: 8),
+            Text(
+              fb.comment,
+              style: const TextStyle(color: AppColors.goldMuted, fontSize: 14),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -316,9 +529,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Star rating display
-// ---------------------------------------------------------------------------
 class _StarRating extends StatelessWidget {
   final double rating;
   const _StarRating({required this.rating});
@@ -328,25 +538,23 @@ class _StarRating extends StatelessWidget {
     return Row(
       children: [
         ...List.generate(5, (i) {
-          if (i < rating.floor()) {
+          if (i < rating.floor())
             return const Icon(
               Icons.star_rounded,
               color: AppColors.gold,
               size: 20,
             );
-          } else if (i < rating) {
+          if (i < rating)
             return const Icon(
               Icons.star_half_rounded,
               color: AppColors.gold,
               size: 20,
             );
-          } else {
-            return const Icon(
-              Icons.star_outline_rounded,
-              color: AppColors.goldMuted,
-              size: 20,
-            );
-          }
+          return const Icon(
+            Icons.star_outline_rounded,
+            color: AppColors.goldMuted,
+            size: 20,
+          );
         }),
         const SizedBox(width: 6),
         Text(
@@ -362,14 +570,10 @@ class _StarRating extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Detail row item
-// ---------------------------------------------------------------------------
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-
   const _DetailRow({
     required this.icon,
     required this.label,
@@ -403,9 +607,6 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Category badge
-// ---------------------------------------------------------------------------
 class _Badge extends StatelessWidget {
   final String label;
   const _Badge({required this.label});
@@ -415,9 +616,9 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.gold.withValues(alpha: 0.15),
+        color: AppColors.gold.withOpacity(0.15),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+        border: Border.all(color: AppColors.gold.withOpacity(0.4)),
       ),
       child: Text(
         label,
@@ -431,9 +632,6 @@ class _Badge extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Sticky bottom bar — Add to Cart
-// ---------------------------------------------------------------------------
 class _BottomBar extends StatefulWidget {
   final Product product;
   const _BottomBar({required this.product});
@@ -464,7 +662,6 @@ class _BottomBarState extends State<_BottomBar> {
       ),
       child: Row(
         children: [
-          // Quantity selector
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: AppColors.border),
@@ -500,16 +697,13 @@ class _BottomBarState extends State<_BottomBar> {
             ),
           ),
           const SizedBox(width: 16),
-
-          // Add to cart button
           Expanded(
             child: FilledButton.icon(
-              onPressed: canAct ? () => _onAddToCart() : null,
+              onPressed: canAct ? _onAddToCart : null,
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 backgroundColor: inStock ? AppColors.gold : AppColors.border,
                 foregroundColor: AppColors.onGold,
-                disabledBackgroundColor: AppColors.border,
               ),
               icon: _loading
                   ? const SizedBox(
@@ -536,7 +730,6 @@ class _BottomBarState extends State<_BottomBar> {
   }
 
   Future<void> _onAddToCart() async {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     setState(() => _loading = true);
     try {
       await CartApi.updateCart(
@@ -547,9 +740,8 @@ class _BottomBarState extends State<_BottomBar> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$_quantity × ${widget.product.name} added to cart'),
+          content: Text('Added $_quantity units to cart'),
           backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
             label: 'View Cart',
             textColor: Colors.white,
@@ -560,35 +752,22 @@ class _BottomBarState extends State<_BottomBar> {
           ),
         ),
       );
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      _showError(e.message);
-    } on NetworkException catch (e) {
-      if (!mounted) return;
-      _showError(e.message);
-    } catch (_) {
-      if (!mounted) return;
-      _showError('An unexpected error occurred. Please try again.');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to add to cart'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 }
 
 class _QtyButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
-
   const _QtyButton({required this.icon, this.onTap});
 
   @override

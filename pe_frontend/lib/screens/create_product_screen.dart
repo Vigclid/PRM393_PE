@@ -273,11 +273,13 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: (_pickedImage != null ||
+                      color:
+                          (_pickedImage != null ||
                               widget.initialProduct != null)
                           ? AppColors.gold
                           : AppColors.border,
-                      width: (_pickedImage != null ||
+                      width:
+                          (_pickedImage != null ||
                               widget.initialProduct != null)
                           ? 2
                           : 1,
@@ -316,68 +318,66 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                           ],
                         )
                       : widget.initialProduct != null
-                          ? Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.network(
-                                  widget.initialProduct!.imageUrl,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, _) => const Icon(
-                                    Icons.image_not_supported,
-                                    color: AppColors.border,
-                                    size: 48,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: GestureDetector(
-                                    onTap: _loading
-                                        ? null
-                                        : _showImageSourceSheet,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.edit_outlined,
-                                        color: AppColors.gold,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  color: AppColors.goldMuted,
-                                  size: 48,
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Tap to add product image',
-                                  style: TextStyle(color: AppColors.goldMuted),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Camera or Gallery',
-                                  style: TextStyle(
-                                    color: AppColors.goldMuted.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.network(
+                              widget.initialProduct!.imageUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, _, _) => const Icon(
+                                Icons.image_not_supported,
+                                color: AppColors.border,
+                                size: 48,
+                              ),
                             ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: _loading ? null : _showImageSourceSheet,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(
+                                      alpha: 0.8,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit_outlined,
+                                    color: AppColors.gold,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.add_photo_alternate_outlined,
+                              color: AppColors.goldMuted,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Tap to add product image',
+                              style: TextStyle(color: AppColors.goldMuted),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Camera or Gallery',
+                              style: TextStyle(
+                                color: AppColors.goldMuted.withValues(
+                                  alpha: 0.6,
+                                ),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
               const SizedBox(height: 20),

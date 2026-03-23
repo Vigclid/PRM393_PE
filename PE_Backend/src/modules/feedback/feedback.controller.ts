@@ -4,6 +4,7 @@ import { responseWrapper } from "../../interfaces/wrapper/ApiResponseWrapper";
 import jwt from "jsonwebtoken";
 import { feedbackService } from "./feedback.service";
 import { IFeedback } from "./feedback.model";
+import BillModel from "../bills/bill.model";
 
 export class feedbackController extends GenericController<IFeedback> {
     private FeedbackService: feedbackService;
@@ -27,6 +28,19 @@ export class feedbackController extends GenericController<IFeedback> {
             const { id } = jwt.decode(req.headers["authorization"]?.split(" ")[1] as string) as {
                 id: string;
             };
+            const { productId } = req.body
+
+            const hasPurchased = await BillModel.findOne({
+                userId: id,
+                "items.productId": productId
+            })
+
+            if (!hasPurchased) {
+                return res.status(403).json(
+                    responseWrapper("error", "Cannot Feedback!", null)
+                );
+            }
+
             req.body.userId = id;
             const result = await this.FeedbackService.createNewFeedback(req.body);
             res.json(responseWrapper("success", "Feedback created successfully", result));
