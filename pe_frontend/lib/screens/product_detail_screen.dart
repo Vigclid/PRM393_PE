@@ -9,9 +9,6 @@ import '../models/product.dart';
 import '../models/feedback.dart' as model;
 import '../session/user_session.dart';
 import '../theme/app_theme.dart';
-import '../providers/comment_provider.dart';
-import '../widgets/comment_form_widget.dart';
-import '../widgets/comment_list_widget.dart';
 import 'create_product_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -51,7 +48,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading feedbacks: $e'); // In lỗi ra để kiểm tra nếu parse JSON thất bại
+      debugPrint(
+        'Error loading feedbacks: $e',
+      ); // In lỗi ra để kiểm tra nếu parse JSON thất bại
       if (mounted) setState(() => _loadingFeedbacks = false);
     }
   }
@@ -136,7 +135,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               const Text(
                 'Product Feedback',
-                style: TextStyle(color: AppColors.gold, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 15),
               Row(
@@ -144,11 +147,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: List.generate(5, (index) {
                   return IconButton(
                     icon: Icon(
-                      index < selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                      index < selectedRating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
                       color: AppColors.gold,
                       size: 32,
                     ),
-                    onPressed: () => setModalState(() => selectedRating = index + 1.0),
+                    onPressed: () =>
+                        setModalState(() => selectedRating = index + 1.0),
                   );
                 }),
               ),
@@ -180,7 +186,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       return;
                     }
                     Navigator.pop(ctx);
-                    await _handleFeedbackSubmit(selectedRating, commentController.text);
+                    await _handleFeedbackSubmit(
+                      selectedRating,
+                      commentController.text,
+                    );
                   },
                   child: const Text('Send Feedback'),
                 ),
@@ -201,9 +210,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feedback sent successfully!'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Feedback sent successfully!'),
+          backgroundColor: Colors.green,
+        ),
       );
-      _loadFeedbacks(); 
+      _loadFeedbacks();
     } on ApiException catch (e) {
       _showError(e.message);
     } catch (e) {
@@ -213,7 +225,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Theme.of(context).colorScheme.error),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
     );
   }
 
@@ -231,25 +246,55 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             pinned: true,
             backgroundColor: AppColors.surface,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.gold),
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded,
+                color: AppColors.gold,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
-            actions: _isOwner ? [
-              if (_deleting)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold))),
-                )
-              else ...[
-                IconButton(icon: const Icon(Icons.edit_outlined, color: AppColors.gold), onPressed: _onEdit),
-                IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: _onDelete),
-              ]
-            ] : null,
+            actions: _isOwner
+                ? [
+                    if (_deleting)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.gold,
+                            ),
+                          ),
+                        ),
+                      )
+                    else ...[
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: AppColors.gold,
+                        ),
+                        onPressed: _onEdit,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                        ),
+                        onPressed: _onDelete,
+                      ),
+                    ],
+                  ]
+                : null,
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'product-image-${product.id}',
                 child: product.imageUrl.isNotEmpty
-                    ? Image.network(product.imageUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _imagePlaceholder)
+                    ? Image.network(
+                        product.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _imagePlaceholder,
+                      )
                     : _imagePlaceholder,
               ),
             ),
@@ -262,7 +307,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   _buildHeader(product, inStock),
                   const SizedBox(height: 12),
-                  Text(product.name, style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 22)),
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   _buildPriceAndRating(product),
                   const SizedBox(height: 20),
@@ -270,29 +322,59 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 16),
                   _buildSectionTitle('Description'),
                   const SizedBox(height: 8),
-                  Text(product.description, style: const TextStyle(color: AppColors.goldMuted, fontSize: 14, height: 1.6)),
+                  Text(
+                    product.description,
+                    style: const TextStyle(
+                      color: AppColors.goldMuted,
+                      fontSize: 14,
+                      height: 1.6,
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   const Divider(color: AppColors.border),
                   const SizedBox(height: 16),
                   _buildSectionTitle('Details'),
                   const SizedBox(height: 12),
-                  _DetailRow(icon: Icons.category_outlined, label: 'Category', value: product.category),
-                  _DetailRow(icon: Icons.inventory_2_outlined, label: 'Stock', value: '${product.stock} units'),
-                  _DetailRow(icon: Icons.calendar_today_outlined, label: 'Listed on', value: _formatDate(product.createdAt)),
-                  _DetailRow(icon: Icons.fingerprint, label: 'Product ID', value: '${product.id.substring(0, 8)}…'),
-                  
+                  _DetailRow(
+                    icon: Icons.category_outlined,
+                    label: 'Category',
+                    value: product.category,
+                  ),
+                  _DetailRow(
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Stock',
+                    value: '${product.stock} units',
+                  ),
+                  _DetailRow(
+                    icon: Icons.calendar_today_outlined,
+                    label: 'Listed on',
+                    value: _formatDate(product.createdAt),
+                  ),
+                  _DetailRow(
+                    icon: Icons.fingerprint,
+                    label: 'Product ID',
+                    value: '${product.id.substring(0, 8)}…',
+                  ),
+
                   const SizedBox(height: 20),
                   const Divider(color: AppColors.border),
                   const SizedBox(height: 16),
-                  
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildSectionTitle('Feedback'),
                       TextButton.icon(
                         onPressed: _showFeedbackModal,
-                        icon: const Icon(Icons.rate_review_outlined, size: 18, color: AppColors.gold),
-                        label: const Text('Add Review', style: TextStyle(color: AppColors.gold)),
+                        icon: const Icon(
+                          Icons.rate_review_outlined,
+                          size: 18,
+                          color: AppColors.gold,
+                        ),
+                        label: const Text(
+                          'Add Review',
+                          style: TextStyle(color: AppColors.gold),
+                        ),
                       ),
                     ],
                   ),
@@ -306,7 +388,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ],
       ),
       bottomNavigationBar: _BottomBar(product: product),
-      ),
     );
   }
 
@@ -315,11 +396,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         _Badge(label: product.category),
         const Spacer(),
-        Icon(inStock ? Icons.check_circle_outline : Icons.cancel_outlined, size: 16, color: inStock ? Colors.greenAccent : Colors.redAccent),
+        Icon(
+          inStock ? Icons.check_circle_outline : Icons.cancel_outlined,
+          size: 16,
+          color: inStock ? Colors.greenAccent : Colors.redAccent,
+        ),
         const SizedBox(width: 4),
         Text(
           inStock ? 'In stock (${product.stock})' : 'Out of stock',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: inStock ? Colors.greenAccent : Colors.redAccent),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: inStock ? Colors.greenAccent : Colors.redAccent,
+          ),
         ),
       ],
     );
@@ -328,7 +417,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget _buildPriceAndRating(Product product) {
     return Row(
       children: [
-        Text('\$${product.price.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 26)),
+        Text(
+          '\$${product.price.toStringAsFixed(2)}',
+          style: const TextStyle(
+            color: AppColors.gold,
+            fontWeight: FontWeight.bold,
+            fontSize: 26,
+          ),
+        ),
         const Spacer(),
         _StarRating(rating: product.averageRating),
       ],
@@ -336,12 +432,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 16));
+    return Text(
+      title,
+      style: const TextStyle(
+        color: AppColors.gold,
+        fontWeight: FontWeight.bold,
+        fontSize: 16,
+      ),
+    );
   }
 
   Widget _buildFeedbackList() {
     if (_loadingFeedbacks) {
-      return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppColors.gold)));
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      );
     }
     if (_feedbacks.isEmpty) {
       return const Text(
@@ -353,7 +461,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _feedbacks.length,
-      separatorBuilder: (_, __) => const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(color: AppColors.border, thickness: 0.5)),
+      separatorBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Divider(color: AppColors.border, thickness: 0.5),
+      ),
       itemBuilder: (ctx, index) {
         final fb = _feedbacks[index];
         return Column(
@@ -371,16 +482,32 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(fb.user.email, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text(
+                        fb.user.email,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                       _StarRating(rating: fb.rating),
                     ],
                   ),
                 ),
-                Text(_formatDate(fb.createdAt), style: const TextStyle(color: AppColors.goldMuted, fontSize: 12)),
+                Text(
+                  _formatDate(fb.createdAt),
+                  style: const TextStyle(
+                    color: AppColors.goldMuted,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(fb.comment, style: const TextStyle(color: AppColors.goldMuted, fontSize: 14)),
+            Text(
+              fb.comment,
+              style: const TextStyle(color: AppColors.goldMuted, fontSize: 14),
+            ),
           ],
         );
       },
@@ -389,7 +516,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget get _imagePlaceholder => Container(
     color: AppColors.surface,
-    child: const Center(child: Icon(Icons.image_not_supported, color: AppColors.border, size: 64)),
+    child: const Center(
+      child: Icon(Icons.image_not_supported, color: AppColors.border, size: 64),
+    ),
   );
 }
 
@@ -402,12 +531,33 @@ class _StarRating extends StatelessWidget {
     return Row(
       children: [
         ...List.generate(5, (i) {
-          if (i < rating.floor()) return const Icon(Icons.star_rounded, color: AppColors.gold, size: 20);
-          if (i < rating) return const Icon(Icons.star_half_rounded, color: AppColors.gold, size: 20);
-          return const Icon(Icons.star_outline_rounded, color: AppColors.goldMuted, size: 20);
+          if (i < rating.floor())
+            return const Icon(
+              Icons.star_rounded,
+              color: AppColors.gold,
+              size: 20,
+            );
+          if (i < rating)
+            return const Icon(
+              Icons.star_half_rounded,
+              color: AppColors.gold,
+              size: 20,
+            );
+          return const Icon(
+            Icons.star_outline_rounded,
+            color: AppColors.goldMuted,
+            size: 20,
+          );
         }),
         const SizedBox(width: 6),
-        Text(rating.toStringAsFixed(1), style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.w600, fontSize: 14)),
+        Text(
+          rating.toStringAsFixed(1),
+          style: const TextStyle(
+            color: AppColors.gold,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -417,7 +567,11 @@ class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  const _DetailRow({required this.icon, required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -427,9 +581,19 @@ class _DetailRow extends StatelessWidget {
         children: [
           Icon(icon, color: AppColors.goldMuted, size: 18),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(color: AppColors.goldMuted, fontSize: 14)),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.goldMuted, fontSize: 14),
+          ),
           const Spacer(),
-          Text(value, style: const TextStyle(color: AppColors.gold, fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.gold,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -449,7 +613,14 @@ class _Badge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppColors.gold.withOpacity(0.4)),
       ),
-      child: Text(label, style: const TextStyle(color: AppColors.gold, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.gold,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -472,17 +643,49 @@ class _BottomBarState extends State<_BottomBar> {
     final canAct = inStock && !_loading;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
-      decoration: const BoxDecoration(color: AppColors.surface, border: Border(top: BorderSide(color: AppColors.border))),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        12 + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
       child: Row(
         children: [
           Container(
-            decoration: BoxDecoration(border: Border.all(color: AppColors.border), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Row(
               children: [
-                _QtyButton(icon: Icons.remove, onTap: canAct && _quantity > 1 ? () => setState(() => _quantity--) : null),
-                SizedBox(width: 36, child: Text('$_quantity', textAlign: TextAlign.center, style: const TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 16))),
-                _QtyButton(icon: Icons.add, onTap: canAct && _quantity < widget.product.stock ? () => setState(() => _quantity++) : null),
+                _QtyButton(
+                  icon: Icons.remove,
+                  onTap: canAct && _quantity > 1
+                      ? () => setState(() => _quantity--)
+                      : null,
+                ),
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    '$_quantity',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                _QtyButton(
+                  icon: Icons.add,
+                  onTap: canAct && _quantity < widget.product.stock
+                      ? () => setState(() => _quantity++)
+                      : null,
+                ),
               ],
             ),
           ),
@@ -495,8 +698,23 @@ class _BottomBarState extends State<_BottomBar> {
                 backgroundColor: inStock ? AppColors.gold : AppColors.border,
                 foregroundColor: AppColors.onGold,
               ),
-              icon: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onGold)) : const Icon(Icons.shopping_cart_outlined, size: 20),
-              label: Text(inStock ? 'Add to Cart' : 'Out of Stock', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              icon: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.onGold,
+                      ),
+                    )
+                  : const Icon(Icons.shopping_cart_outlined, size: 20),
+              label: Text(
+                inStock ? 'Add to Cart' : 'Out of Stock',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
             ),
           ),
         ],
@@ -507,17 +725,33 @@ class _BottomBarState extends State<_BottomBar> {
   Future<void> _onAddToCart() async {
     setState(() => _loading = true);
     try {
-      await CartApi.updateCart(productId: widget.product.id, priceAtTime: widget.product.price, quantity: _quantity);
+      await CartApi.updateCart(
+        productId: widget.product.id,
+        priceAtTime: widget.product.price,
+        quantity: _quantity,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Added $_quantity units to cart'),
           backgroundColor: Colors.green,
-          action: SnackBarAction(label: 'View Cart', textColor: Colors.white, onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen()))),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CartScreen()),
+            ),
+          ),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add to cart'), backgroundColor: Colors.redAccent));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to add to cart'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -535,7 +769,11 @@ class _QtyButton extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Icon(icon, size: 18, color: onTap != null ? AppColors.gold : AppColors.border),
+        child: Icon(
+          icon,
+          size: 18,
+          color: onTap != null ? AppColors.gold : AppColors.border,
+        ),
       ),
     );
   }

@@ -10,7 +10,6 @@ import v1Bill from "./v1/bill.routes";
 import v1Feedback from "./v1/feedback.routes";
 import v1Post from "./v1/post.routes";
 import v1Notification from "./v1/notification.routes";
-import v1ProductComment from "./v1/product-comment.routes";
 
 const router = Router();
 
@@ -27,6 +26,5 @@ router.use(
   v1Post,
   v1Feedback,
   v1Notification,
-  v1ProductComment
 );
 export default router;

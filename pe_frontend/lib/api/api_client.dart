@@ -22,7 +22,7 @@ class NetworkException implements Exception {
 
   @override
   String toString() => 'NetworkException: $message';
-} 
+}
 
 class ApiClient {
   /// Base URL from centralized config
