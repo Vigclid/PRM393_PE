@@ -11,6 +11,7 @@ export class productService extends GenericService<IProduct> {
   getMyProducts = async (userId: string) => {
     return await productModel.find({ userId }).populate("userId");
   };
+  
   getAllProductsWithAverageRating = async () => {
     return await productModel.aggregate([
       {

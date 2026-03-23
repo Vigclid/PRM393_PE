@@ -7,7 +7,7 @@ export class feedbackService extends GenericService<IFeedback> {
     }
 
     getAllFeedbackByProductId = async (id: string) => {
-        return feedbackModel.find({ productId: id });
+        return feedbackModel.find({ productId: id }).populate("userId");
     }
 
     createNewFeedback = async (data: Partial<IFeedback>) => {
