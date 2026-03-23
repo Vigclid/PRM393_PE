@@ -5,6 +5,7 @@ import '../session/user_session.dart';
 import '../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'social_feed_screen.dart';
+import 'report_support_list_screen.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -176,6 +177,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       children: [
         _TotalRevenueCard(total: _stats!.totalRevenue),
         const SizedBox(height: 20),
+        
+        // Revenue Chart
+        _RevenueChart(breakdown: _stats!.breakdown),
+        const SizedBox(height: 20),
+
         const Text(
           'Breakdown',
           style: TextStyle(
@@ -186,6 +192,25 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         ),
         const SizedBox(height: 10),
         ..._stats!.breakdown.map((item) => _BreakdownRow(item: item)),
+        const SizedBox(height: 20),
+
+        // Report Support Button
+        FilledButton.icon(
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ReportSupportListScreen()),
+          ),
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.orange,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          icon: const Icon(Icons.support_agent),
+          label: const Text(
+            'Report Support',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
       ],
     );
   }
@@ -361,6 +386,102 @@ class _BreakdownRow extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Revenue Chart
+// ---------------------------------------------------------------------------
+class _RevenueChart extends StatelessWidget {
+  final List<RevenueBreakdown> breakdown;
+
+  const _RevenueChart({required this.breakdown});
+
+  @override
+  Widget build(BuildContext context) {
+    if (breakdown.isEmpty) return const SizedBox.shrink();
+
+    final maxRevenue = breakdown.fold<double>(
+      0,
+      (max, item) => item.totalRevenue > max ? item.totalRevenue : max,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Revenue Trend',
+            style: TextStyle(
+              color: AppColors.gold,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: breakdown.map((item) {
+                final height = (item.totalRevenue / maxRevenue) * 150;
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: height,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.gold.withOpacity(0.8),
+                            AppColors.gold.withOpacity(0.4),
+                          ],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.period.length > 5
+                          ? item.period.substring(0, 5)
+                          : item.period,
+                      style: const TextStyle(
+                        color: AppColors.goldMuted,
+                        fontSize: 11,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${item.totalRevenue.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: AppColors.gold,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),

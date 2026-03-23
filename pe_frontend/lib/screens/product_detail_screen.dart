@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pe_frontend/screens/cart_screen.dart';
-import 'package:provider/provider.dart';
+import 'package:pe_frontend/widgets/screen_with_ai_chat.dart';
 import '../api/api_client.dart';
 import '../api/cart_api.dart';
 import '../api/product_api.dart';
@@ -237,157 +237,160 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final product = widget.product;
     final inStock = product.stock > 0;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: AppColors.surface,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: AppColors.gold,
+    return ScreenWithAIChat(
+      productId: product.id,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 300,
+              pinned: true,
+              backgroundColor: AppColors.surface,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.gold,
+                ),
+                onPressed: () => Navigator.pop(context),
               ),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: _isOwner
-                ? [
-                    if (_deleting)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.gold,
+              actions: _isOwner
+                  ? [
+                      if (_deleting)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.gold,
+                              ),
                             ),
                           ),
+                        )
+                      else ...[
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: AppColors.gold,
+                          ),
+                          onPressed: _onEdit,
                         ),
-                      )
-                    else ...[
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_outlined,
-                          color: AppColors.gold,
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.redAccent,
+                          ),
+                          onPressed: _onDelete,
                         ),
-                        onPressed: _onEdit,
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.redAccent,
-                        ),
-                        onPressed: _onDelete,
-                      ),
-                    ],
-                  ]
-                : null,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: 'product-image-${product.id}',
-                child: product.imageUrl.isNotEmpty
-                    ? Image.network(
-                        product.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _imagePlaceholder,
-                      )
-                    : _imagePlaceholder,
+                      ],
+                    ]
+                  : null,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Hero(
+                  tag: 'product-image-${product.id}',
+                  child: product.imageUrl.isNotEmpty
+                      ? Image.network(
+                          product.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _imagePlaceholder,
+                        )
+                      : _imagePlaceholder,
+                ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(product, inStock),
-                  const SizedBox(height: 12),
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPriceAndRating(product),
-                  const SizedBox(height: 20),
-                  const Divider(color: AppColors.border),
-                  const SizedBox(height: 16),
-                  _buildSectionTitle('Description'),
-                  const SizedBox(height: 8),
-                  Text(
-                    product.description,
-                    style: const TextStyle(
-                      color: AppColors.goldMuted,
-                      fontSize: 14,
-                      height: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Divider(color: AppColors.border),
-                  const SizedBox(height: 16),
-                  _buildSectionTitle('Details'),
-                  const SizedBox(height: 12),
-                  _DetailRow(
-                    icon: Icons.category_outlined,
-                    label: 'Category',
-                    value: product.category,
-                  ),
-                  _DetailRow(
-                    icon: Icons.inventory_2_outlined,
-                    label: 'Stock',
-                    value: '${product.stock} units',
-                  ),
-                  _DetailRow(
-                    icon: Icons.calendar_today_outlined,
-                    label: 'Listed on',
-                    value: _formatDate(product.createdAt),
-                  ),
-                  _DetailRow(
-                    icon: Icons.fingerprint,
-                    label: 'Product ID',
-                    value: '${product.id.substring(0, 8)}…',
-                  ),
-
-                  const SizedBox(height: 20),
-                  const Divider(color: AppColors.border),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildSectionTitle('Feedback'),
-                      TextButton.icon(
-                        onPressed: _showFeedbackModal,
-                        icon: const Icon(
-                          Icons.rate_review_outlined,
-                          size: 18,
-                          color: AppColors.gold,
-                        ),
-                        label: const Text(
-                          'Add Review',
-                          style: TextStyle(color: AppColors.gold),
-                        ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(product, inStock),
+                    const SizedBox(height: 12),
+                    Text(
+                      product.name,
+                      style: const TextStyle(
+                        color: AppColors.gold,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildFeedbackList(),
-                  const SizedBox(height: 100),
-                ],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPriceAndRating(product),
+                    const SizedBox(height: 20),
+                    const Divider(color: AppColors.border),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Description'),
+                    const SizedBox(height: 8),
+                    Text(
+                      product.description,
+                      style: const TextStyle(
+                        color: AppColors.goldMuted,
+                        fontSize: 14,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(color: AppColors.border),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Details'),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      icon: Icons.category_outlined,
+                      label: 'Category',
+                      value: product.category,
+                    ),
+                    _DetailRow(
+                      icon: Icons.inventory_2_outlined,
+                      label: 'Stock',
+                      value: '${product.stock} units',
+                    ),
+                    _DetailRow(
+                      icon: Icons.calendar_today_outlined,
+                      label: 'Listed on',
+                      value: _formatDate(product.createdAt),
+                    ),
+                    _DetailRow(
+                      icon: Icons.fingerprint,
+                      label: 'Product ID',
+                      value: '${product.id.substring(0, 8)}…',
+                    ),
+
+                    const SizedBox(height: 20),
+                    const Divider(color: AppColors.border),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionTitle('Feedback'),
+                        TextButton.icon(
+                          onPressed: _showFeedbackModal,
+                          icon: const Icon(
+                            Icons.rate_review_outlined,
+                            size: 18,
+                            color: AppColors.gold,
+                          ),
+                          label: const Text(
+                            'Add Review',
+                            style: TextStyle(color: AppColors.gold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildFeedbackList(),
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+        bottomNavigationBar: _BottomBar(product: product),
       ),
-      bottomNavigationBar: _BottomBar(product: product),
     );
   }
 

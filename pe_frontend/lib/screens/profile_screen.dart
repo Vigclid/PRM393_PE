@@ -3,6 +3,8 @@ import '../models/user.dart';
 import '../session/user_session.dart';
 import '../theme/theme_notifier.dart';
 import 'login_screen.dart';
+import 'report_screen.dart';
+import 'my_reports_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -30,6 +32,16 @@ class ProfileScreen extends StatelessWidget {
             fontSize: 20,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.list_alt_rounded, color: scheme.primary),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MyReportsScreen()),
+            ),
+            tooltip: 'My Reports',
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
@@ -41,6 +53,8 @@ class ProfileScreen extends StatelessWidget {
           _DetailsCard(user: user),
           const SizedBox(height: 24),
           _SettingsCard(),
+          const SizedBox(height: 24),
+          _ReportIssueButton(),
           const SizedBox(height: 24),
           _LogoutButton(),
           const SizedBox(height: 16),
@@ -353,6 +367,32 @@ class _SettingsCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Report Issue button
+// ---------------------------------------------------------------------------
+class _ReportIssueButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return FilledButton.icon(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ReportScreen()),
+      ),
+      icon: const Icon(Icons.flag_outlined),
+      label: const Text(
+        'Report Issue',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+      ),
     );
   }
 }
